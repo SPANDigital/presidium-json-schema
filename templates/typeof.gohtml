@@ -1,0 +1,5 @@
+{{- define "typeof" -}}
+    {{- range $idx, $property := .Items -}}
+        {{- template "property" dict "Name" (printf ".%d" $idx) "Property" $property  -}}
+    {{- end -}}
+{{- end -}}

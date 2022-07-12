@@ -1,0 +1,55 @@
+{{- define "property"}}
+    {{- $anchor := anchorize .Property.Location -}}
+    {{- $name := firstNonEmpty .Name .Property.Title (humanize .Property.Location) }}
+    {{- template "row" dict "Name" $name "Property" .Property }}
+
+    {{- if .Property.Properties -}}
+        {{- range $name, $property := .Property.Properties -}}
+            {{- template "property" dict "Name" (print $.Name ">" $name) "Property" $property -}}
+        {{- end -}}
+
+        {{- if .Property.PatternProperties -}}
+            {{- range $name, $property := .Property.PatternProperties -}}
+                {{- template "property" dict "Name" (escapeRegex $name) "Property" $property -}}
+            {{- end -}}
+        {{- end -}}
+
+    {{- end -}}
+
+    {{- if .Property.Items -}}
+        {{- if isSlice .Property.Items -}}
+            {{- range $idx, $property := .Property.Items -}}
+                {{- template "property" dict "Name" (printf "%s>ItemType[%d]" $.name $idx) "Property" $property -}}
+            {{- end -}}
+        {{- else -}}
+            {{- template "property" dict "Name" (print $name ">ItemType") "Property" .Property.Items -}}
+        {{- end -}}
+    {{- end -}}
+
+    {{- if .Property.Items2020 -}}
+        {{- template "property" dict "Name" (print $name " > ItemType") "Property" .Property.Items2020 -}}
+    {{- end -}}
+
+    {{- if .Property.AnyOf -}}
+        {{- range $idx, $property := .Property.AnyOf -}}
+            {{- template "property" dict "Name" (printf "%s > AnyOf" $name) "Property" $property -}}
+        {{- end -}}
+    {{- end -}}
+
+    {{- if .Property.OneOf -}}
+        {{- range $idx, $property := .Property.OneOf -}}
+            {{- template "property" dict "Name" (printf "%s > OneOf" $name) "Property" $property -}}
+        {{- end -}}
+    {{- end -}}
+
+    {{- if .Property.AllOf -}}
+        {{- range $idx, $property := .Property.AllOf -}}
+            {{- template "property" dict "Name" (printf "%s > AllOf" $name) "Property" $property -}}
+        {{- end -}}
+    {{- end -}}
+
+{{- end -}}
+
+{{- define "row" }}
+| {{ .Name }}| {{ template "type" .Property }} | {{ .Property.Description }} | {{ template "validations" .Property }} |
+{{- end -}}

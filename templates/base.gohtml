@@ -1,0 +1,6 @@
+{{- $anchor := humanize .Location -}}
+{{- $title := firstNonEmpty .Title $anchor -}}
+---
+title: {{ $title }}
+---
+{{ template "schema" . }}

@@ -1,0 +1,38 @@
+{{- define "any" -}}
+    {{- $vals := slice -}}
+
+    {{- if .Format -}}
+        {{- $vals = append $vals (printf "**Format:** %s" .Format) -}}
+    {{- end -}}
+
+    {{- if .Constant -}}
+        {{- $vals = append $vals (printf "Constant: %+v" .Constant) -}}
+    {{- end -}}
+
+    {{- if .Enum -}}
+        {{- $vals = append $vals (printf "Enum: %+v" .Enum) -}}
+    {{- end -}}
+
+    {{- if .Not -}}
+        {{- $vals = append $vals (printf "Not: %s" .Not) -}}
+    {{- end -}}
+
+    {{- if .If -}}
+        {{- $vals = append $vals (printf "If: %+v" .If) -}}
+    {{- end -}}
+
+    {{- if .Then -}}
+        {{- $vals = append $vals (printf "Then: %+v" .Then) -}}
+    {{- end -}}
+
+    {{- if .Else -}}
+        {{- $vals = append $vals (printf "Else: %+v" .Else) -}}
+    {{- end -}}
+
+    {{- if .RecursiveAnchor -}}
+        {{- $vals = append $vals (printf "Recursive Anchor: %s" .RecursiveAnchor) -}}
+    {{- end -}}
+
+    {{- join $vals "<br>" -}}
+
+{{- end -}}

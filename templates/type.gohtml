@@ -1,0 +1,52 @@
+{{- define "type" -}}
+    {{- $types := slice -}}
+    {{- $anchor := anchorize $.Location -}}
+
+    {{- range $idx, $type := .Types -}}
+        {{- $types = append $types (title $type) -}}
+    {{- else -}}
+
+        {{- if .Properties -}}
+            {{- $types = append $types "Object" -}}
+        {{- end -}}
+
+        {{- if .AnyOf -}}
+            {{- $types = append $types "AnyOf" -}}
+        {{- end -}}
+
+        {{- if .AllOf -}}
+            {{- $types = append $types "AllOf" -}}
+        {{- end -}}
+
+        {{- if .OneOf -}}
+            {{- $types = append $types "OneOf" -}}
+        {{- end -}}
+
+        {{- if .Ref -}}
+            {{- $anchor := anchorize .Ref.Location -}}
+            {{- $alt := humanize .Ref.Location -}}
+            {{- $title := firstNonEmpty .Ref.Title $alt -}}
+            {{- $types = append $types (printf "[%s](#%s)" $title $anchor) -}}
+        {{- end -}}
+
+        {{- if .DynamicRef -}}
+            {{- $anchor := anchorize .DynamicRef.Location -}}
+            {{- $alt := humanize .DynamicRef.Location -}}
+            {{- $title := firstNonEmpty .DynamicRef.Title $alt -}}
+            {{- $types = append $types (printf "[%s](#%s)" $title $anchor) -}}
+        {{- end -}}
+
+        {{- if .RecursiveRef -}}
+            {{- $anchor := anchorize .RecursiveRef.Location -}}
+            {{- $alt := humanize .RecursiveRef.Location -}}
+            {{- $title := firstNonEmpty .RecursiveRef.Title $alt -}}
+            {{- $types = append $types (printf "[%s](#%s)" $title $anchor) -}}
+        {{- end -}}
+    {{- end -}}
+
+    {{- join $types "<br/>" -}}
+
+{{- end -}}
+
+
+

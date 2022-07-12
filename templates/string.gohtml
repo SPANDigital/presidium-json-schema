@@ -1,0 +1,26 @@
+{{- define "string" -}}
+    {{- $vals := slice -}}
+
+    {{- if gt .MinLength 0 -}}
+        {{- $vals = append $vals (printf "Min Length: %+v" .MinLength) -}}
+    {{- end -}}
+
+    {{- if gt .MaxLength 0 -}}
+        {{- $vals = append $vals (printf "Max Length: %+v" .MaxLength) -}}
+    {{- end -}}
+
+    {{- if .Pattern -}}
+        {{- $vals = append $vals (printf "Pattern: %+v" .Pattern) -}}
+    {{- end -}}
+
+    {{- if .ContentEncoding -}}
+        {{- $vals = append $vals (printf "Content Encoding: %+v" .ContentEncoding) -}}
+    {{- end -}}
+
+    {{- if gt (len $vals) 0 -}}
+        **String:**<br>
+    {{- end -}}
+
+    {{- join $vals "<br>" -}}
+
+{{- end -}}
