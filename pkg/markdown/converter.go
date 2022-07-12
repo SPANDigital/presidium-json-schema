@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/SPANDigital/presidium-json-schema/templates"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 	"io/fs"
@@ -86,7 +87,7 @@ func (c Converter) applyMiddleware(m map[string]interface{}) {
 
 func (c Converter) compileSchemas(schemas []string) (err error) {
 	c.template = template.New("").Funcs(FuncMap(c.config.ReferenceUrl, c.patterns))
-	c.template, err = c.template.ParseGlob("templates/*.gohtml")
+	c.template, err = c.template.ParseFS(templates.Files, "*.gohtml")
 	if err != nil {
 		return err
 	}
