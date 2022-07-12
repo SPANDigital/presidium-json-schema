@@ -10,7 +10,7 @@
     {{- end -}}
 
     {{- if .Pattern -}}
-        {{- $vals = append $vals (printf "Pattern: %+v" .Pattern) -}}
+        {{- $vals = append $vals (printf "Pattern: %+v" (lookupRegex .Pattern)) -}}
     {{- end -}}
 
     {{- if .ContentEncoding -}}

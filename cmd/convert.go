@@ -14,8 +14,9 @@ var config markdown.Config
 func init() {
 	flags := convert.Flags()
 	flags.StringVarP(&config.Destination, "destination", "d", ".", "the output directory")
+	flags.StringVarP(&config.ReferenceUrl, "reference", "r", "reference", "the reference url")
 	flags.StringVarP(&config.Extension, "extension", "e", "*.schema.json", "the schema extension")
-	flags.BoolVarP(&config.Recursive, "recursive", "r", false, "walk through directory looking for schemas")
+	flags.BoolVarP(&config.Recursive, "walk", "w", false, "walk through sub-directories")
 	rootCmd.AddCommand(convert)
 }
 
@@ -35,7 +36,7 @@ var convert = &cobra.Command{
 func validatePaths() cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			return errors.New("requires at least 1 file or folder path")
+			return errors.New("requires at least 1 folder path")
 		}
 
 		for _, path := range args {

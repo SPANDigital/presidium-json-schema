@@ -1,28 +1,28 @@
-{{- define "schema" }}
-{{- $anchor := anchorize .Location -}}
+{{- define "schema" -}}
 {{ $name := firstNonEmpty .Title (humanize .Location) }}
+{{- if gt (len .Types) 0 -}}**Type:** {{ join .Types ", " }}
 
-{{- if gt (len .Types) 0 -}}
-**Type:** {{ join .Types ", " }}
-{{- end }}
-{{ if .Description }}
-**Description:** {{.Description}}
 {{ end }}
 
-{{ template "validations" . }}
-{{ if .Properties }}
+{{- if .Description -}}**Description:** {{.Description}}
+
+{{ end -}}
+
+{{- template "validations" . }}
+
+{{ if .Properties -}}
     {{- template "tableHeader" "Properties:" -}}
     {{- range $name, $property := .Properties -}}
         {{- template "property" dict "Name" $name "Property" $property -}}
     {{- end -}}
-{{- end }}
+{{- end -}}
 
-{{ if .PatternProperties }}
+{{- if .PatternProperties -}}
     {{- template "tableHeader" "Pattern Properties:" -}}
     {{- range $name, $property := .PatternProperties -}}
-        {{- template "property" dict "Name" (escapeRegex $name) "Property" $property -}}
+        {{- template "property" dict "Name" (lookupRegex $name) "Property" $property -}}
     {{- end -}}
-{{- end }}
+{{- end -}}
 
 {{- if .Items -}}
     {{- template "tableHeader" "Array Items:" -}}
@@ -40,25 +40,18 @@
     {{- template "property" dict "Name" "ItemType" "Property" .Items2020 -}}
 {{- end -}}
 
-{{- if .AllOf }}
-    {{- template "tableHeader" "AllOf:" -}}
-    {{- template "typeof" dict "Title" "AllOf" "Items" .AllOf -}}
-{{- end -}}
-
-{{- if .AnyOf -}}
-    {{- template "tableHeader" "AnyOf:" -}}
-    {{- template "typeof" dict "Title" "AnyOf" "Items" .AnyOf -}}
-{{- end -}}
-
-{{- if .OneOf }}
-    {{- template "tableHeader" "OneOf:" -}}
-    {{- template "typeof" dict "Title" "OneOf" "Items" .OneOf -}}
+{{- $typeOfs := findTypeOfs . -}}
+{{- if $typeOfs -}}
+    {{ range $idx, $property := $typeOfs }}
+        {{ template "typeOfs" $property }}
+    {{ end }}
 {{- end -}}
 
 {{ end }}
 
 {{- define "tableHeader" -}}
 ### {{.}}
-| Name | Types | Description | Restrictions |
+| Name | Type | Description | Restrictions |
 |------|------|-------------|--------------|
 {{- end -}}
+

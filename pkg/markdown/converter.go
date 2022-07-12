@@ -1,38 +1,38 @@
 package markdown
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/SPANDigital/presidium-json-schema/templates"
-	"github.com/fsnotify/fsnotify"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
-	"io"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"text/template"
 )
 
 type Converter struct {
-	config      Config
-	compiler    *jsonschema.Compiler
-	definitions map[string]*jsonschema.Schema
-	template    *template.Template
-	done        chan struct{}
+	config   Config
+	compiler *jsonschema.Compiler
+	template *template.Template
+	patterns map[string]string
 }
 
+type middlewareFunc func(prop interface{}) interface{}
+
 func NewConverter(config Config) *Converter {
+	compiler := jsonschema.NewCompiler()
+	compiler.ExtractAnnotations = true
+
 	return &Converter{
-		config:      config,
-		compiler:    jsonschema.NewCompiler(),
-		definitions: map[string]*jsonschema.Schema{},
+		config:   config,
+		compiler: compiler,
+		patterns: map[string]string{},
 	}
 }
 
 func (c *Converter) Convert(path string) error {
-	c.compiler.ExtractAnnotations = true
 	schemas, err := FindFiles(path, c.config.Extension, c.config.Recursive)
 	if err != nil {
 		return err
@@ -44,77 +44,49 @@ func (c *Converter) Convert(path string) error {
 		}
 	}
 
-	return c.watch(schemas, c.convertSchemas)
-}
-
-// For development only, will be removed
-func (c Converter) watch(schemas []string, delegate func(s []string) error) error {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return err
-	}
-	defer watcher.Close()
-
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				log.Println("event:", event)
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					if err := delegate(schemas); err != nil {
-						log.Print(err)
-					}
-				}
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				log.Println("error:", err)
-			}
-		}
-	}()
-
-	err = watcher.Add("./templates")
-	if err != nil {
-		return err
-	}
-
-	<-c.done
-	return nil
+	return c.compileSchemas(schemas)
 }
 
 func (c Converter) loadSchema(path string) error {
-	f, err := os.Open(path)
+	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer file.Close()
 
-	var header SchemaHeader
-	dec := json.NewDecoder(f)
-	if err = dec.Decode(&header); err != nil {
+	var schema RawSchema
+	dec := json.NewDecoder(file)
+	if err = dec.Decode(&schema); err != nil {
 		return err
 	}
 
-	var url = header.Id
-	if len(url) == 0 {
-		url = path
+	c.applyMiddleware(schema)
+	b, err := json.Marshal(schema)
+	if err != nil {
+		return nil
 	}
 
-	if _, err = f.Seek(0, io.SeekStart); err != nil {
-		return err
-	}
-
-	return c.compiler.AddResource(url, f)
+	url := FirstNonEmpty(schema.Id(), path)
+	return c.compiler.AddResource(url, bytes.NewReader(b))
 }
 
-func (c Converter) convertSchemas(schemas []string) (err error) {
-	c.template = template.New("").Funcs(FuncMap())
+func (c Converter) applyMiddleware(m map[string]interface{}) {
+	for key, fn := range c.middleware() {
+		if prop, ok := m[key]; ok {
+			m[key] = fn(prop)
+		}
+	}
 
-	c.template, err = c.template.ParseFS(templates.Files, "*.gohtml")
+	for _, prop := range m {
+		if _, ok := prop.(map[string]interface{}); ok {
+			c.applyMiddleware(prop.(map[string]interface{}))
+		}
+	}
+}
+
+func (c Converter) compileSchemas(schemas []string) (err error) {
+	c.template = template.New("").Funcs(FuncMap(c.config.ReferenceUrl, c.patterns))
+	c.template, err = c.template.ParseGlob("templates/*.gohtml")
 	if err != nil {
 		return err
 	}
@@ -134,35 +106,37 @@ func (c Converter) convertSchemas(schemas []string) (err error) {
 }
 
 func (c Converter) convertSchema(s *jsonschema.Schema) error {
-	path := filepath.Join(c.config.Destination, SchemaFileName(s.Title, s.Location))
-	if err := os.MkdirAll(path, fs.ModePerm); err != nil {
+	var definitions []*jsonschema.Schema
+	WalkSchema(s, true, func(s *jsonschema.Schema) error {
+		if s.Ref != nil {
+			definitions = append(definitions, s.Ref)
+		}
+		return nil
+	})
+
+	if err := c.convertToMarkdown("_index", s); err != nil {
 		return err
 	}
 
-	if err := c.renderSchema(path, "_index", s); err != nil {
-		return err
-	}
-
-	c.definitions = map[string]*jsonschema.Schema{}
-	c.findDefinitions(s, TrimAnchor(s.Location), map[string]bool{})
-	for _, schema := range c.definitions {
-		fp := filepath.Join(path, SchemaFilePath(schema.Location))
-		name := SchemaFileName(schema.Title, schema.Location)
-		if err := c.renderSchema(fp, name, schema); err != nil {
+	for _, def := range definitions {
+		fileName := FileName(def.Title, def.Location)
+		if err := c.convertToMarkdown(fileName, def); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
-func (c Converter) renderSchema(path, filename string, schema *jsonschema.Schema) error {
+func (c Converter) convertToMarkdown(filename string, schema *jsonschema.Schema) error {
+	path := filepath.Join(c.config.Destination, FilePath(schema.Location))
 	if err := c.createIndex(path); err != nil {
 		return err
 	}
 
+	filename = fmt.Sprintf("%s.md", filename)
 	path = filepath.Join(path, filename)
-	file, err := os.Create(fmt.Sprintf("%s.md", path))
+
+	file, err := os.Create(path)
 	if err != nil {
 		return err
 	}
@@ -177,8 +151,8 @@ func (c Converter) createIndex(path string) error {
 		return nil
 	}
 
-	idx := filepath.Join(path, "_index.md")
-	if _, err := os.Stat(idx); !os.IsNotExist(err) {
+	_index := filepath.Join(path, "_index.md")
+	if _, err := os.Stat(_index); !os.IsNotExist(err) {
 		return nil
 	}
 
@@ -186,73 +160,42 @@ func (c Converter) createIndex(path string) error {
 		return err
 	}
 
-	dir := filepath.Base(path)
-	fm := fmt.Sprintf("---\ntitle: %s\n---", dir)
-	file, err := os.Create(idx)
+	file, err := os.Create(_index)
 	if err != nil {
-		return err
-	}
-
-	if _, err := file.Write([]byte(fm)); err != nil {
 		return err
 	}
 
 	defer file.Close()
 
+	dir := filepath.Base(path)
+	fm := fmt.Sprintf("---\ntitle: %s\n---", dir)
+	if _, err := file.Write([]byte(fm)); err != nil {
+		return err
+	}
+
 	return c.createIndex(filepath.Dir(path))
 }
 
-func (c *Converter) findDefinitions(s *jsonschema.Schema, location string, visited map[string]bool) {
-	if s == nil || visited[s.Location] {
-		return
+// Regex lookahead/behind is not supported in Go and the schema will not compile if the regex is invalid.
+// As a workaround, replace the regex with a hash and use the hash to load it from the template
+// See https://github.com/santhosh-tekuri/jsonschema/issues/31
+func (c *Converter) middleware() map[string]middlewareFunc {
+	return map[string]middlewareFunc{
+		"patternProperties": func(prop interface{}) interface{} {
+			props := prop.(map[string]interface{})
+			patterns := map[string]interface{}{}
+			for k, v := range props {
+				h := Hash(k)
+				c.patterns[h] = k
+				patterns[h] = v
+			}
+			return patterns
+		},
+		"pattern": func(prop interface{}) interface{} {
+			pattern := prop.(string)
+			hash := Hash(pattern)
+			c.patterns[hash] = pattern
+			return hash
+		},
 	}
-
-	visited[s.Location] = true
-	if s.Ref != nil {
-		if IsInternalRef(location, s.Ref.Location) || IsRemoteRef(s.Ref.Location) {
-			c.definitions[s.Ref.Location] = s.Ref
-		}
-	}
-
-	traverse := func(schema *jsonschema.Schema) {
-		c.findDefinitions(schema, location, visited)
-	}
-
-	traverseEach := func(schemas ...*jsonschema.Schema) {
-		for _, schema := range schemas {
-			traverse(schema)
-		}
-	}
-
-	traverseEach(s.AnyOf...)
-	traverseEach(s.AllOf...)
-	traverseEach(s.OneOf...)
-	traverseEach(s.PrefixItems...)
-	traverseEach(
-		s.Not, s.Else, s.Then, s.Contains,
-		s.DynamicRef, s.Ref, s.RecursiveRef,
-		s.PropertyNames, s.UnevaluatedItems,
-		s.UnevaluatedProperties, s.Items2020,
-	)
-
-	for _, schema := range s.Properties {
-		traverse(schema)
-	}
-
-	for _, schema := range s.DependentSchemas {
-		traverse(schema)
-	}
-
-	for _, schema := range s.PatternProperties {
-		traverse(schema)
-	}
-
-	switch s.Items.(type) {
-	case *jsonschema.Schema:
-		traverse(s.Items.(*jsonschema.Schema))
-	case []*jsonschema.Schema:
-		traverseEach(s.Items.([]*jsonschema.Schema)...)
-	}
-
-	return
 }

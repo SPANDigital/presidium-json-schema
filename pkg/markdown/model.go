@@ -1,13 +1,19 @@
 package markdown
 
 type Config struct {
-	Source      string
-	Destination string
-	Extension   string
-	Recursive   bool
-	Local       bool
+	Destination  string
+	ReferenceUrl string
+	Extension    string
+	Recursive    bool
+	Local        bool
 }
 
-type SchemaHeader struct {
-	Id string `json:"$id"`
+type RawSchema map[string]interface{}
+
+func (r RawSchema) Id() string {
+	id := r["$id"]
+	if _, ok := id.(string); ok {
+		return id.(string)
+	}
+	return ""
 }

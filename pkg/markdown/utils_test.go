@@ -3,7 +3,6 @@ package markdown
 import (
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/stretchr/testify/assert"
-	"regexp"
 	"testing"
 )
 
@@ -103,10 +102,10 @@ func TestAppend(t *testing.T) {
 }
 
 func TestEscapeRegex(t *testing.T) {
-	testCases := map[*regexp.Regexp]string{
-		regexp.MustCompile("^(abc|b|c|d)$"): "`^(abc\\|b\\|c\\|d)$`",
-		regexp.MustCompile("^\\W$"):         "`^\\W$`",
-		regexp.MustCompile("^"):             "`^`",
+	testCases := map[string]string{
+		"^(abc|b|c|d)$": "`^(abc\\|b\\|c\\|d)$`",
+		"^\\W$":         "`^\\W$`",
+		"^":             "`^`",
 	}
 
 	for val, expected := range testCases {
@@ -160,59 +159,55 @@ func TestIsInternalRef(t *testing.T) {
 	}
 }
 
-func TestAnchor(t *testing.T) {
-	testCases := map[string]string{
-		"presidium-json-schema/test/sample.schema.json#/properties/dimensions": "/properties/dimensions",
-		"#/properties/dimensions": "/properties/dimensions",
-		"test/ref.schema.json#":   "ref.schema",
-	}
-
-	for val, expected := range testCases {
-		actual := Anchor(val)
-		assert.Equal(t, actual, expected)
-	}
-}
-
-func TestAnchorize(t *testing.T) {
-	testCases := map[string]string{
-		"presidium-json-schema/test/sample.schema.json#/properties/dimensions": "properties-dimensions",
-		"test/ref.schema.json#": "ref-schema",
-	}
-
-	for val, expected := range testCases {
-		actual := Anchorize(val)
-		assert.Equal(t, actual, expected)
-	}
-}
-
 func TestSchemaFilePath(t *testing.T) {
 	testCases := map[string]string{
-		"/test/sample.schema.json#/properties/dimensions": "/properties/",
-		"ref.schema.json#/dimensions/attributes/":         "/dimensions/attributes/",
-		"#/dimensions/attributes/ref.json":                "/dimensions/attributes/",
-		"test/ref.schema.json#":                           "",
-		"ref.schema.json#":                                "",
-		"#":                                               "",
+		"ref.schema.json#/definitions/pagination/properties/first": "ref-schema/definitions",
+		"test/ref.schema.json#/attributes":                         "ref-schema",
+		"test/ref.schema.json#/definitions/attributes/dimensions":  "ref-schema/definitions",
+		"test/ref.schema.json#/attributes/dimensions":              "ref-schema",
+		"ref.schema.json#": "ref-schema",
 	}
 
 	for val, expected := range testCases {
-		actual := SchemaFilePath(val)
-		assert.Equal(t, actual, expected)
+		actual := FilePath(val)
+		assert.Equal(t, expected, actual)
 	}
 }
 
 func TestSchemaFileName(t *testing.T) {
-	actual := SchemaFileName("", "test/ref.schema.json#")
+	actual := FileName("", "test/ref.schema.json#")
 	assert.Equal(t, actual, "ref-schema")
 
-	actual = SchemaFileName("Ref", "test/ref.schema.json#")
+	actual = FileName("", "/test/sample.schema.json#/properties/dimensions")
+	assert.Equal(t, actual, "dimensions")
+
+	actual = FileName("Ref", "test/ref.schema.json#")
 	assert.Equal(t, actual, "ref")
 
-	actual = SchemaFileName("#$%#", "test/ref.schema.json#")
+	actual = FileName("#$%#", "test/ref.schema.json#")
 	assert.Equal(t, actual, "ref-schema")
 
-	actual = SchemaFileName("#$%#", "test/")
+	actual = FileName("#$%#", "test/")
 	assert.Equal(t, actual, "test")
+}
+
+func TestGetUrl(t *testing.T) {
+	link := GetPermalink("reference")
+	actual := link(&jsonschema.Schema{
+		Location: "/test/sample.schema.json#/properties/dimensions",
+	})
+	assert.Equal(t, "[dimensions]({{%baseurl%}}/reference/sample-schema/#dimensions)", actual)
+
+	actual = link(&jsonschema.Schema{
+		Title:    "sample",
+		Location: "/test/sample.schema.json#/properties/dimensions",
+	})
+	assert.Equal(t, "[sample]({{%baseurl%}}/reference/sample-schema/#sample)", actual)
+
+	actual = link(&jsonschema.Schema{
+		Location: "sample.schema.json#/dimensions",
+	})
+	assert.Equal(t, "[dimensions]({{%baseurl%}}/reference/sample-schema/#dimensions)", actual)
 }
 
 func TestFilenameWithoutExt(t *testing.T) {

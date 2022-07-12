@@ -1,6 +1,5 @@
 {{- define "type" -}}
     {{- $types := slice -}}
-    {{- $anchor := anchorize $.Location -}}
 
     {{- range $idx, $type := .Types -}}
         {{- $types = append $types (title $type) -}}
@@ -11,37 +10,32 @@
         {{- end -}}
 
         {{- if .AnyOf -}}
-            {{- $types = append $types "AnyOf" -}}
+            {{- $types = append $types (printf "[AnyOf](#%s)" (ref .Location)) -}}
         {{- end -}}
 
         {{- if .AllOf -}}
-            {{- $types = append $types "AllOf" -}}
+            {{- $types = append $types (printf "[AllOf](#%s)" (ref .Location)) -}}
         {{- end -}}
 
         {{- if .OneOf -}}
-            {{- $types = append $types "OneOf" -}}
+            {{- $types = append $types (printf "[OneOf](#%s)" (ref .Location)) -}}
         {{- end -}}
 
         {{- if .Ref -}}
-            {{- $anchor := anchorize .Ref.Location -}}
-            {{- $alt := humanize .Ref.Location -}}
-            {{- $title := firstNonEmpty .Ref.Title $alt -}}
-            {{- $types = append $types (printf "[%s](#%s)" $title $anchor) -}}
+            {{- $url := permalink .Ref -}}
+            {{- $types = append $types $url -}}
         {{- end -}}
 
         {{- if .DynamicRef -}}
-            {{- $anchor := anchorize .DynamicRef.Location -}}
-            {{- $alt := humanize .DynamicRef.Location -}}
-            {{- $title := firstNonEmpty .DynamicRef.Title $alt -}}
-            {{- $types = append $types (printf "[%s](#%s)" $title $anchor) -}}
+            {{- $url := permalink .DynamicRef -}}
+            {{- $types = append $types $url -}}
         {{- end -}}
 
         {{- if .RecursiveRef -}}
-            {{- $anchor := anchorize .RecursiveRef.Location -}}
-            {{- $alt := humanize .RecursiveRef.Location -}}
-            {{- $title := firstNonEmpty .RecursiveRef.Title $alt -}}
-            {{- $types = append $types (printf "[%s](#%s)" $title $anchor) -}}
+            {{- $url := permalink .RecursiveRef -}}
+            {{- $types = append $types $url -}}
         {{- end -}}
+
     {{- end -}}
 
     {{- join $types "<br/>" -}}
