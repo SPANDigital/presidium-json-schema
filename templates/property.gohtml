@@ -1,0 +1,36 @@
+{{- define "property"}}
+    {{- $name := firstNonEmpty .Name .Property.Title (humanize .Property.Location) }}
+    {{- template "row" dict "Name" $name "Property" .Property }}
+
+    {{- if .Property.Properties -}}
+        {{- range $name, $property := .Property.Properties -}}
+            {{- template "property" dict "Name" (printf "Object > %s" $name) "Property" $property -}}
+        {{- end -}}
+
+        {{- if .Property.PatternProperties -}}
+            {{- range $name, $property := .Property.PatternProperties -}}
+                {{- template "property" dict "Name" (printf "Pattern > %s" (lookupRegex $name))  "Property" $property -}}
+            {{- end -}}
+        {{- end -}}
+
+    {{- end -}}
+
+    {{- if .Property.Items -}}
+        {{- if isSlice .Property.Items -}}
+            {{- range $idx, $property := .Property.Items -}}
+                {{- template "property" dict "Name" (printf "Array > ItemType[%d]" $idx) "Property" $property -}}
+            {{- end -}}
+        {{- else -}}
+            {{- template "property" dict "Name" "Array > ItemType" "Property" .Property.Items -}}
+        {{- end -}}
+    {{- end -}}
+
+    {{- if .Property.Items2020 -}}
+        {{- template "property" dict "Name" " Array > ItemType" "Property" .Property.Items2020 -}}
+    {{- end -}}
+
+{{- end -}}
+
+{{- define "row" }}
+| {{ .Name }}| {{ template "type" .Property }} | {{ .Property.Description }} | {{ template "validations" .Property }} |
+{{- end -}}

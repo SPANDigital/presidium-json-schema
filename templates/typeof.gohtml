@@ -1,0 +1,29 @@
+{{- define "typeOfs" -}}
+    {{- if .AllOf -}}
+        {{- template "typeHeader" dict "Name" "AllOf" "Location" .Location -}}
+        {{- template "typeProperty" .AllOf -}}
+    {{- end -}}
+
+    {{- if .AnyOf -}}
+        {{- template "typeHeader"  dict "Name" "AnyOf" "Location" .Location -}}
+        {{- template "typeProperty" .AnyOf -}}
+    {{- end -}}
+
+    {{- if .OneOf -}}
+        {{- template "typeHeader"  dict "Name" "OneOf" "Location" .Location -}}
+        {{- template "typeProperty" .OneOf -}}
+    {{- end -}}
+
+{{- end -}}
+
+{{- define "typeHeader" }}
+### {{.Name}} {{ printf "{#%s}" (ref .Location) }}
+| Type | Description | Restrictions |
+|-------|-------------|--------------|
+{{- end -}}
+
+{{- define "typeProperty" -}}
+    {{- range $idx, $property := . }}
+        | {{ template "type" $property }} | {{ .Description }} | {{ template "validations" $property }} |
+    {{- end -}}
+{{- end -}}

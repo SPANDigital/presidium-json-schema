@@ -1,0 +1,46 @@
+{{- define "type" -}}
+    {{- $types := slice -}}
+
+    {{- range $idx, $type := .Types -}}
+        {{- $types = append $types (title $type) -}}
+    {{- else -}}
+
+        {{- if .Properties -}}
+            {{- $types = append $types "Object" -}}
+        {{- end -}}
+
+        {{- if .AnyOf -}}
+            {{- $types = append $types (printf "[AnyOf](#%s)" (ref .Location)) -}}
+        {{- end -}}
+
+        {{- if .AllOf -}}
+            {{- $types = append $types (printf "[AllOf](#%s)" (ref .Location)) -}}
+        {{- end -}}
+
+        {{- if .OneOf -}}
+            {{- $types = append $types (printf "[OneOf](#%s)" (ref .Location)) -}}
+        {{- end -}}
+
+        {{- if .Ref -}}
+            {{- $url := permalink .Ref -}}
+            {{- $types = append $types $url -}}
+        {{- end -}}
+
+        {{- if .DynamicRef -}}
+            {{- $url := permalink .DynamicRef -}}
+            {{- $types = append $types $url -}}
+        {{- end -}}
+
+        {{- if .RecursiveRef -}}
+            {{- $url := permalink .RecursiveRef -}}
+            {{- $types = append $types $url -}}
+        {{- end -}}
+
+    {{- end -}}
+
+    {{- join $types "<br/>" -}}
+
+{{- end -}}
+
+
+

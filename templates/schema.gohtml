@@ -1,0 +1,57 @@
+{{- define "schema" -}}
+{{ $name := firstNonEmpty .Title (humanize .Location) }}
+{{- if gt (len .Types) 0 -}}**Type:** {{ join .Types ", " }}
+
+{{ end }}
+
+{{- if .Description -}}**Description:** {{.Description}}
+
+{{ end -}}
+
+{{- template "validations" . }}
+
+{{ if .Properties -}}
+    {{- template "tableHeader" "Properties:" -}}
+    {{- range $name, $property := .Properties -}}
+        {{- template "property" dict "Name" $name "Property" $property -}}
+    {{- end -}}
+{{- end -}}
+
+{{- if .PatternProperties -}}
+    {{- template "tableHeader" "Pattern Properties:" -}}
+    {{- range $name, $property := .PatternProperties -}}
+        {{- template "property" dict "Name" (lookupRegex $name) "Property" $property -}}
+    {{- end -}}
+{{- end -}}
+
+{{- if .Items -}}
+    {{- template "tableHeader" "Array Items:" -}}
+    {{- if isSlice .Items -}}
+        {{- range $idx, $property := .Items -}}
+            {{- template "property" dict "Name" (printf "ItemType[%d]" $idx) "Property" $property -}}
+        {{- end -}}
+    {{- else -}}
+        {{- template "property" dict "Name" "ItemType" "Property" .Items -}}
+    {{- end -}}
+{{- end -}}
+
+{{- if .Items2020 -}}
+    {{- template "tableHeader" "Array Items:" -}}
+    {{- template "property" dict "Name" "ItemType" "Property" .Items2020 -}}
+{{- end -}}
+
+{{- $typeOfs := findTypeOfs . -}}
+{{- if $typeOfs -}}
+    {{ range $idx, $property := $typeOfs }}
+        {{ template "typeOfs" $property }}
+    {{ end }}
+{{- end -}}
+
+{{ end }}
+
+{{- define "tableHeader" -}}
+### {{.}}
+| Name | Type | Description | Restrictions |
+|------|------|-------------|--------------|
+{{- end -}}
+
