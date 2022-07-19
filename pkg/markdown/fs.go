@@ -2,24 +2,27 @@ package markdown
 
 import (
 	"fmt"
+	"github.com/spf13/afero"
+	"gopkg.in/errgo.v2/errors"
 	"io/fs"
-	"path/filepath"
 )
 
-func FindFiles(path string, filter string, recursive bool) ([]string, error) {
+var AppFS = afero.NewOsFs()
+
+func FindFiles(path string, pattern string, recursive bool) ([]string, error) {
 	if !recursive {
-		return filterFiles(path, filter)
+		return filterFiles(path, pattern)
 	}
 
 	var files []string
-	err := filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
+	err := afero.Walk(AppFS, path, func(path string, info fs.FileInfo, err error) error {
 		if !info.IsDir() {
 			return nil
 		}
 
-		matches, err := filterFiles(path, filter)
+		matches, err := filterFiles(path, pattern)
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 
 		files = append(files, matches...)
@@ -30,5 +33,5 @@ func FindFiles(path string, filter string, recursive bool) ([]string, error) {
 
 func filterFiles(path, filter string) ([]string, error) {
 	pattern := fmt.Sprintf("%s/%s", path, filter)
-	return filepath.Glob(pattern)
+	return afero.Glob(AppFS, pattern)
 }

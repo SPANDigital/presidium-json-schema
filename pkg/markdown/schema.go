@@ -2,14 +2,50 @@ package markdown
 
 import (
 	"github.com/santhosh-tekuri/jsonschema/v5"
+	log "github.com/sirupsen/logrus"
 )
 
-// WalkSchema walks the schema tree, calling fn for each schema in the tree, including root.
-func WalkSchema(s *jsonschema.Schema, followRef bool, fn func(s *jsonschema.Schema) error) {
-	walkSchema(s, followRef, map[string]bool{}, fn)
+type RawSchema map[string]interface{}
+
+type Schema struct {
+	*jsonschema.Schema
 }
 
-func walkSchema(s *jsonschema.Schema, followRef bool, visited map[string]bool, fn func(s *jsonschema.Schema) error) {
+func ToSchema(s *jsonschema.Schema) *Schema {
+	if s == nil {
+		return nil
+	}
+
+	return &Schema{s}
+}
+
+func (r RawSchema) Id() string {
+	id := r["$id"]
+	if _, ok := id.(string); ok {
+		return id.(string)
+	}
+	return ""
+}
+
+// Definitions returns all references from the current schema
+func (s *Schema) Definitions() []*Schema {
+	var definitions []*Schema
+	s.WalkSchema(true, func(next *Schema) error {
+		if next.Ref != nil && next.Location != s.Location {
+			log.Debugf("found definition: %s", s.Ref)
+			definitions = append(definitions, ToSchema(next.Ref))
+		}
+		return nil
+	})
+	return definitions
+}
+
+// WalkSchema walks the schema tree, calling fn for each schema in the tree, including root.
+func (s *Schema) WalkSchema(followRef bool, fn func(s *Schema) error) {
+	s.walkSchema(followRef, map[string]bool{}, fn)
+}
+
+func (s *Schema) walkSchema(followRef bool, visited map[string]bool, fn func(s *Schema) error) {
 	if s == nil || visited[s.Location] {
 		return
 	}
@@ -20,7 +56,7 @@ func walkSchema(s *jsonschema.Schema, followRef bool, visited map[string]bool, f
 
 	visited[s.Location] = true
 	walk := func(schema *jsonschema.Schema) {
-		walkSchema(schema, followRef, visited, fn)
+		ToSchema(schema).walkSchema(followRef, visited, fn)
 	}
 
 	walkEach := func(schemas ...*jsonschema.Schema) {

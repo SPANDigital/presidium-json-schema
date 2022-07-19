@@ -10,7 +10,7 @@
     {{- end -}}
 
     {{- if .Required -}}
-        {{- $vals = append $vals (printf "Required: %+v" .Required) -}}
+        {{- $vals = append $vals (printf "Required: [%+v]" (join .Required ", " )) -}}
     {{- end -}}
 
     {{- if .RegexProperties -}}

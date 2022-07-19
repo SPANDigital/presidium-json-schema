@@ -24,6 +24,6 @@
 
 {{- define "typeProperty" -}}
     {{- range $idx, $property := . }}
-        | {{ template "type" $property }} | {{ .Description }} | {{ template "validations" $property }} |
+| {{ template "type" $property }} | {{ .Description }} | {{ template "validations" $property }} |
     {{- end -}}
 {{- end -}}

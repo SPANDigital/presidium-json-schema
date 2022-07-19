@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Product",
+  "description": "A product from Acme's catalog",
+  "type": "object",
+  "properties": {
+    "productId": {
+      "description": "The unique identifier for a product",
+      "type": ["integer", "string"]
+    },
+    "productName": {
+      "description": "Name of the product",
+      "type": "string"
+    },
+    "price": {
+      "description": "The price of the product",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "tags": {
+      "description": "Tags for the product",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "jsonSchema20": {
+      "$ref": "https://json-schema.org/draft/2020-12/schema"
+    },
+    "jsonSchema19": {
+      "$ref": "https://json-schema.org/draft/2019-09/schema"
+    },
+    "jsonSchema07": {
+      "$ref": "https://json-schema.org/draft-07/schema"
+    },
+    "jsonSchema06": {
+      "$ref": "https://json-schema.org/draft-06/schema"
+    },
+    "jsonSchema04": {
+      "$ref": "https://json-schema.org/draft-04/schema"
+    },
+    "dimensions": {
+      "type": "object",
+      "properties": {
+        "length": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "shipping_address": { "$ref": "ref.schema.json" }
+      },
+      "required": [ "length", "width", "height" ]
+    }
+  },
+  "required": [ "productId", "productName", "price" ]
+}

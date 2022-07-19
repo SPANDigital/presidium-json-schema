@@ -157,7 +157,7 @@ func FilePath(location string) string {
 	return root
 }
 
-func GetPermalink(ref string) func(*jsonschema.Schema) string {
+func GetPermalink(ref string) func(schema *jsonschema.Schema) string {
 	return func(schema *jsonschema.Schema) string {
 		alt := Humanize(schema.Location)
 		title := FirstNonEmpty(schema.Title, alt)
@@ -168,10 +168,10 @@ func GetPermalink(ref string) func(*jsonschema.Schema) string {
 	}
 }
 
-func FindTypeOfs(s *jsonschema.Schema) []*jsonschema.Schema {
-	var schemas []*jsonschema.Schema
+func FindTypeOfs(s *Schema) []*Schema {
+	var schemas []*Schema
 	var unique = map[string]bool{}
-	WalkSchema(s, false, func(s *jsonschema.Schema) error {
+	s.WalkSchema(false, func(s *Schema) error {
 		if unique[s.Location] {
 			return nil
 		}
