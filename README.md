@@ -5,7 +5,7 @@ A Golang tool for importing your [JSON Schema](http://json-schema.org/) spec int
 
 ```text
 Usage:
-  presidium-json convert [flags]
+  presidium-json convert <path> [flags]
 
 Flags:
   -d, --destination string   the output directory (default ".")
