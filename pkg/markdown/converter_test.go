@@ -2,13 +2,14 @@ package markdown
 
 import (
 	"fmt"
-	"github.com/santhosh-tekuri/jsonschema/v5"
-	"github.com/spf13/afero"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/santhosh-tekuri/jsonschema/v5"
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -32,6 +33,26 @@ func TestNewConverter(t *testing.T) {
 	assert.Equal(t, config, c.config)
 	assert.NotNil(t, c.patterns)
 	assert.NotNil(t, c.compiler)
+}
+
+func TestConverter_Clean(t *testing.T) {
+	c := NewConverter(config)
+	test_output := filepath.Join(rootpath, "test_output")
+	test_file, err := AppFS.Create(test_output)
+	assert.Nil(t, err)
+	defer test_file.Close()
+
+	c.config.Destination = test_output
+	exists, err := afero.Exists(AppFS, test_output)
+	assert.Nil(t, err)
+	assert.True(t, exists)
+
+	err = c.Clean()
+	assert.Nil(t, err)
+
+	exists, err = afero.Exists(AppFS, test_output)
+	assert.Nil(t, err)
+	assert.False(t, exists)
 }
 
 func TestConverter_Convert(t *testing.T) {
