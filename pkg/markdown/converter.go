@@ -46,7 +46,26 @@ func NewConverter(config Config) *Converter {
 	}
 }
 
+func (c Converter) Clean() error {
+	if !PathExist(c.config.Destination) {
+		return nil
+	}
+	if err := AppFS.RemoveAll(c.config.Destination); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func PathExist(path string) bool {
+	if _, err := AppFS.Stat(path); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
 func (c *Converter) Convert(path string) error {
+	c.Clean()
 	if err := c.parseTemplates(); err != nil {
 		return err
 	}
