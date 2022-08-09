@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/SPANDigital/presidium-json-schema/templates"
+	"github.com/iancoleman/orderedmap"
 	"github.com/pkg/errors"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -26,6 +28,7 @@ type Converter struct {
 	template  *template.Template
 	converted map[string]bool
 	patterns  map[string]string
+	order     map[string]*orderedmap.OrderedMap
 }
 
 type middlewareFunc func(prop interface{}) interface{}
@@ -39,6 +42,7 @@ func NewConverter(config Config) *Converter {
 		compiler:  compiler,
 		converted: map[string]bool{},
 		patterns:  map[string]string{},
+		order:     map[string]*orderedmap.OrderedMap{},
 	}
 }
 
@@ -91,7 +95,7 @@ func (c *Converter) Convert(path string) error {
 
 // parseTemplates parses all gohtml templates from the embedded fs
 func (c *Converter) parseTemplates() (err error) {
-	c.template = template.New("").Funcs(FuncMap(c.config.ReferenceUrl, c.patterns))
+	c.template = template.New("").Funcs(FuncMap(c.config.ReferenceUrl(), c.patterns, c.order))
 	c.template, err = c.template.ParseFS(templates.Files, "*.gohtml")
 	if err != nil {
 		return errors.Wrap(err, "failed to parse templates")
@@ -107,14 +111,25 @@ func (c *Converter) loadSchema(path string) error {
 	}
 	defer schemaFile.Close()
 
+	b, err := ioutil.ReadAll(schemaFile)
+	if err != nil {
+		return err
+	}
+
 	var schema RawSchema
-	dec := json.NewDecoder(schemaFile)
-	if err = dec.Decode(&schema); err != nil {
+	if err = json.Unmarshal(b, &schema); err != nil {
 		return errors.Wrapf(err, "failed to decode schema: %s", path)
 	}
 
+	if c.config.Ordered {
+		c.order[path] = orderedmap.New()
+		if err = json.Unmarshal(b, c.order[path]); err != nil {
+			return errors.Wrapf(err, "failed to decode schema: %s", path)
+		}
+	}
+
 	c.applyMiddleware(schema)
-	b, err := json.Marshal(schema)
+	b, err = json.Marshal(schema)
 	if err != nil {
 		return errors.Wrapf(err, "failed to marshal schema: %s", path)
 	}
@@ -138,7 +153,7 @@ func (c *Converter) applyMiddleware(m map[string]interface{}) {
 	}
 }
 
-// compileSchemas compiles each schema from their path
+// compileSchemas compiles each schema from their Path
 func (c *Converter) compileSchemas(paths []string) ([]*Schema, error) {
 	var schemas []*Schema
 	for _, path := range paths {
@@ -147,7 +162,7 @@ func (c *Converter) compileSchemas(paths []string) ([]*Schema, error) {
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to compile schema: %schema", path)
 		}
-		schemas = append(schemas, ToSchema(schema))
+		schemas = append(schemas, ToSchema(schema, path))
 	}
 	return schemas, nil
 }
@@ -173,7 +188,7 @@ func (c *Converter) convertToMarkdown(filename string, schema *Schema) error {
 	return c.template.ExecuteTemplate(mdFile, "base.gohtml", schema)
 }
 
-// createIndex creates a _index.md file for each directory in the path
+// createIndex creates a _index.md file for each directory in the Path
 func (c *Converter) createIndex(path string) error {
 	log.Debugf("creating index: %s", path)
 	path = filepath.Clean(path)

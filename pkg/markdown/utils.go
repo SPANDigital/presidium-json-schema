@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"github.com/iancoleman/orderedmap"
 	"github.com/iancoleman/strcase"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"golang.org/x/text/cases"
@@ -56,12 +57,24 @@ func Title(val string) string {
 	return cases.Title(language.English).String(val)
 }
 
-func TrimAnchor(path string) string {
+// TrimAnchorPath returns the path before the anchor (#)
+// /a/b/c#d/e => /a/b/c
+func TrimAnchorPath(path string) string {
 	i := strings.Index(path, "#")
 	if i < 0 {
 		return path
 	}
 	return path[:i]
+}
+
+// AnchorPath returns the path after the anchor (#)
+// /a/b/c#d/e => d/e
+func AnchorPath(path string) string {
+	i := strings.Index(path, "#")
+	if i < 0 {
+		return ""
+	}
+	return path[i+1:]
 }
 
 func Humanize(path string) string {
@@ -80,7 +93,7 @@ func IsRemoteRef(location string) bool {
 }
 
 func IsInternalRef(location, ref string) bool {
-	return location == TrimAnchor(ref)
+	return location == TrimAnchorPath(ref)
 }
 
 func FirstNonEmpty(values ...string) string {
@@ -185,7 +198,48 @@ func FindTypeOfs(s *Schema) []*Schema {
 	return schemas
 }
 
-func FuncMap(ref string, patterns map[string]string) template.FuncMap {
+func IndexOf(slice []string, val string) int {
+	for i, s := range slice {
+		if s == val {
+			return i + 1
+		}
+	}
+	return -1
+}
+
+// GetWeight returns the schema weight based on it's position in the schema file
+func GetWeight(schemaOrders map[string]*orderedmap.OrderedMap) func(path, location string) int {
+	return func(path, location string) int {
+		order, ok := schemaOrders[path]
+		if !ok {
+			return -1
+		}
+
+		anchor := strings.TrimPrefix(AnchorPath(location), "/")
+		keys := strings.Split(anchor, "/")
+		for i, key := range keys {
+			if len(keys) == i+1 {
+				return IndexOf(order.Keys(), key)
+			}
+
+			val, exist := order.Get(key)
+			if !exist {
+				return -1
+			}
+
+			switch val.(type) {
+			case orderedmap.OrderedMap:
+				m := val.(orderedmap.OrderedMap)
+				order = &m
+			case *orderedmap.OrderedMap:
+				order = val.(*orderedmap.OrderedMap)
+			}
+		}
+		return -1
+	}
+}
+
+func FuncMap(ref string, patterns map[string]string, order map[string]*orderedmap.OrderedMap) template.FuncMap {
 	return template.FuncMap{
 		"slugify":       Slugify,
 		"dict":          Dict,
@@ -197,6 +251,7 @@ func FuncMap(ref string, patterns map[string]string) template.FuncMap {
 		"isSchema":      IsSchema,
 		"lookupRegex":   LookupRegex(patterns),
 		"permalink":     GetPermalink(ref),
+		"weight":        GetWeight(order),
 		"findTypeOfs":   FindTypeOfs,
 		"humanize":      Humanize,
 		"slice":         Slice,

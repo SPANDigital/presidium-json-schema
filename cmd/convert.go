@@ -14,15 +14,15 @@ var config markdown.Config
 func init() {
 	flags := convert.Flags()
 	flags.StringVarP(&config.Destination, "destination", "d", ".", "the output directory")
-	flags.StringVarP(&config.ReferenceUrl, "reference", "r", "reference", "the reference url")
 	flags.StringVarP(&config.Extension, "extension", "e", "*.schema.json", "the schema extension")
 	flags.BoolVarP(&config.Recursive, "walk", "w", false, "walk through sub-directories")
+	flags.BoolVarP(&config.Ordered, "ordered", "o", false, "preserve the schema order (defaults to alphabetical)")
 	rootCmd.AddCommand(convert)
 }
 
 var convert = &cobra.Command{
-	Use:   "convert",
-	Short: "convert",
+	Use:   "convert [path]",
+	Short: "convert [path]",
 	Args:  validatePaths(),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := markdown.NewConverter(config)

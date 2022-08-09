@@ -8,15 +8,19 @@ import (
 type RawSchema map[string]interface{}
 
 type Schema struct {
+
+	// the Path of the json file this schemas belongs to
+	Path string
+
 	*jsonschema.Schema
 }
 
-func ToSchema(s *jsonschema.Schema) *Schema {
+func ToSchema(s *jsonschema.Schema, path string) *Schema {
 	if s == nil {
 		return nil
 	}
 
-	return &Schema{s}
+	return &Schema{path, s}
 }
 
 func (r RawSchema) Id() string {
@@ -33,7 +37,7 @@ func (s *Schema) Definitions() []*Schema {
 	s.WalkSchema(true, func(next *Schema) error {
 		if next.Ref != nil && next.Location != s.Location {
 			log.Debugf("found definition: %s", s.Ref)
-			definitions = append(definitions, ToSchema(next.Ref))
+			definitions = append(definitions, ToSchema(next.Ref, s.Path))
 		}
 		return nil
 	})
@@ -56,7 +60,7 @@ func (s *Schema) walkSchema(followRef bool, visited map[string]bool, fn func(s *
 
 	visited[s.Location] = true
 	walk := func(schema *jsonschema.Schema) {
-		ToSchema(schema).walkSchema(followRef, visited, fn)
+		ToSchema(schema, s.Path).walkSchema(followRef, visited, fn)
 	}
 
 	walkEach := func(schemas ...*jsonschema.Schema) {

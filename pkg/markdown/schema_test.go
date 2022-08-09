@@ -32,7 +32,7 @@ func TestRawSchema_Id(t *testing.T) {
 func TestWalkSchema(t *testing.T) {
 	var expected = append(schemas, ref, root)
 	var definitions []*jsonschema.Schema
-	ToSchema(root).WalkSchema(true, func(s *Schema) error {
+	ToSchema(root, "").WalkSchema(true, func(s *Schema) error {
 		definitions = append(definitions, s.Schema)
 		return nil
 	})
@@ -43,7 +43,7 @@ func TestWalkSchema(t *testing.T) {
 func TestWalkNoRefSchema(t *testing.T) {
 	var expected = append(schemas, root)
 	var definitions []*jsonschema.Schema
-	ToSchema(root).WalkSchema(false, func(s *Schema) error {
+	ToSchema(root, "").WalkSchema(false, func(s *Schema) error {
 		definitions = append(definitions, s.Schema)
 		return nil
 	})
@@ -58,7 +58,7 @@ func TestWalkRecursiveSchema(t *testing.T) {
 
 	var expected = []*jsonschema.Schema{a, b}
 	var definitions []*jsonschema.Schema
-	ToSchema(a).WalkSchema(true, func(s *Schema) error {
+	ToSchema(a, "").WalkSchema(true, func(s *Schema) error {
 		definitions = append(definitions, s.Schema)
 		return nil
 	})

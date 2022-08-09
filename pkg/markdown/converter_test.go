@@ -21,11 +21,10 @@ func init() {
 }
 
 var config = Config{
-	Destination:  "/a",
-	Local:        false,
-	Extension:    "*.schema.json",
-	Recursive:    false,
-	ReferenceUrl: "b",
+	Destination: "/a",
+	Local:       false,
+	Extension:   "*.schema.json",
+	Recursive:   false,
 }
 
 func TestNewConverter(t *testing.T) {
@@ -80,6 +79,7 @@ func TestConverter_convertToMarkdown(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = c.convertToMarkdown("test", &Schema{
+		"",
 		&jsonschema.Schema{
 			Title: "hello",
 		},

@@ -1,6 +1,7 @@
 package markdown
 
 import (
+	"github.com/iancoleman/orderedmap"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -231,5 +232,64 @@ func TestHumanize(t *testing.T) {
 	for val, expected := range testCases {
 		actual := Humanize(val)
 		assert.Equal(t, actual, expected)
+	}
+}
+
+func TestGetAnchorPath(t *testing.T) {
+	testCases := map[string]string{
+		"ref.schema.json#/definitions/pagination/properties/first": "/definitions/pagination/properties/first",
+		"test/ref.schema.json#/attributes":                         "/attributes",
+		"test/ref.schema.json#/definitions/attributes/dimensions":  "/definitions/attributes/dimensions",
+		"test/ref.schema.json#/attributes/dimensions":              "/attributes/dimensions",
+		"ref.schema.json#": "",
+	}
+
+	for val, expected := range testCases {
+		actual := AnchorPath(val)
+		assert.Equal(t, expected, actual)
+	}
+}
+
+func TestTrimAnchor(t *testing.T) {
+	testCases := map[string]string{
+		"ref.schema.json#/definitions/pagination/properties/first": "ref.schema.json",
+		"test/ref.schema.json#/attributes":                         "test/ref.schema.json",
+		"test/ref.schema.json#/definitions/attributes/dimensions":  "test/ref.schema.json",
+		"ref.schema.json#": "ref.schema.json",
+	}
+
+	for val, expected := range testCases {
+		actual := TrimAnchorPath(val)
+		assert.Equal(t, expected, actual)
+	}
+}
+
+func TestGetWeight(t *testing.T) {
+	a := orderedmap.New()
+	b := orderedmap.New()
+	c := orderedmap.New()
+
+	c.Set("a", "")
+	c.Set("b", "")
+	c.Set("c", "")
+
+	b.Set("a", "")
+	b.Set("b", c)
+
+	a.Set("a", *b)
+
+	weightFn := GetWeight(map[string]*orderedmap.OrderedMap{"test.json": a})
+
+	testCases := map[string]int{
+		"#/a/b/c": 3,
+		"#/a/b/z": -1,
+		"#/a/b":   2,
+		"#/a":     1,
+		"#":       -1,
+	}
+
+	for loc, expected := range testCases {
+		actual := weightFn("test.json", loc)
+		assert.Equal(t, expected, actual)
 	}
 }
