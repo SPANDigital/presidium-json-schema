@@ -1,0 +1,30 @@
+{{- define "array" -}}
+    {{- $vals := slice -}}
+
+    {{- if gt .MinItems 0 -}}
+        {{- $vals = append $vals (printf "Min Items: %+v" .MinItems) -}}
+    {{- end -}}
+
+    {{- if gt .MaxItems 0 -}}
+        {{- $vals = append $vals (printf "Max Items: %+v" .MaxItems) -}}
+    {{- end -}}
+
+    {{- if gt .MinContains 0 -}}
+        {{- $vals = append $vals (printf "Min Contains: %+v" .MinContains) -}}
+    {{- end -}}
+
+    {{- if gt .MaxContains 0 -}}
+        {{- $vals = append $vals (printf "Max Contains: %+v" .MaxContains) -}}
+    {{- end -}}
+
+    {{- if .UniqueItems -}}
+        {{- $vals = append $vals (printf "Unique Items: %+v" .UniqueItems) -}}
+    {{- end -}}
+
+    {{- if gt (len $vals) 0 -}}
+        **Array:**<br>
+    {{- end -}}
+
+    {{- join $vals "<br>" -}}
+
+{{- end -}}

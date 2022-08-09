@@ -1,0 +1,26 @@
+{{- define "number" -}}
+    {{- $vals := slice -}}
+
+    {{- if .Minimum -}}
+        {{- $vals = append $vals (printf "Min: %+v" .Minimum) -}}
+    {{- end -}}
+
+    {{- if .Maximum -}}
+        {{- $vals = append $vals (printf "Max: %+v" .Maximum) -}}
+    {{- end }}
+
+    {{- if .ExclusiveMaximum -}}
+        {{- $vals = append $vals (printf "Exclusive Max: %+v" .ExclusiveMaximum) -}}
+    {{- end }}
+
+    {{- if .MultipleOf -}}
+        {{- $vals = append $vals (printf "MultipleOf: %+v" .MultipleOf) -}}
+    {{- end -}}
+
+    {{- if gt (len $vals) 0 -}}
+        **Number:**<br>
+    {{- end -}}
+
+    {{- join $vals "<br>" -}}
+
+{{- end -}}

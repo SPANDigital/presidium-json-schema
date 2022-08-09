@@ -1,0 +1,14 @@
+{{- define "validations" -}}
+    {{- range $idx, $type := .Types -}}
+        {{- if eq $type "object" -}}
+            {{ template "object" $ }}
+        {{- else if eq $type "array" -}}
+            {{ template "array" $ }}
+        {{- else if eq $type "string" -}}
+            {{ template "string" $ }}
+        {{- else if or (eq $type "integer") (eq $type "number") -}}
+            {{ template "number" $ }}
+        {{- end -}}
+    {{- end -}}
+    {{- template "any" $ -}}
+{{- end -}}

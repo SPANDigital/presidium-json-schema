@@ -1,0 +1,8 @@
+{{- $anchor := humanize .Location -}}
+{{- $title := firstNonEmpty .Title $anchor -}}
+{{- $weight := weight .Path .Location -}}
+---
+title: {{ $title }}
+{{ if gt $weight 0 -}}weight: {{$weight}}{{- end }}
+---
+{{ template "schema" . }}

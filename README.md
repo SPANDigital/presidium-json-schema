@@ -5,13 +5,13 @@ A Golang tool for importing your [JSON Schema](http://json-schema.org/) spec int
 
 ```text
 Usage:
-  presidium-json convert [flags]
+  presidium-json convert [path] [flags]
 
 Flags:
   -d, --destination string   the output directory (default ".")
   -e, --extension string     the schema extension (default "*.schema.json")
-  -h, --help                 help for convert
-  -r, --recursive            walk through directory looking for schemas
+  -o, --ordered              preserve the schema order (defaults to alphabetical)
+  -w, --walk                 walk through sub-directories
 ```
 
 To convert a file you simply:

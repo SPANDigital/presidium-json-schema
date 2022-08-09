@@ -1,0 +1,34 @@
+{{- define "object" -}}
+    {{- $vals := slice -}}
+
+    {{- if gt .MinProperties 0 -}}
+        {{- $vals = append $vals (printf "Min Properties: %+v" .MinProperties) -}}
+    {{- end -}}
+
+    {{- if gt .MaxProperties 0 -}}
+        {{- $vals = append $vals (printf "Max Properties: %+v" .MaxProperties) -}}
+    {{- end -}}
+
+    {{- if .Required -}}
+        {{- $vals = append $vals (printf "Required: [%+v]" (join .Required ", " )) -}}
+    {{- end -}}
+
+    {{- if .RegexProperties -}}
+        {{- $vals = append $vals (printf "Regex: %+v" .RegexProperties) -}}
+    {{- end -}}
+
+    {{- if ne .AdditionalProperties nil -}}
+        {{- if isSchema .AdditionalProperties -}}
+            Additional Properties: {{ template "type" .AdditionalProperties -}}
+        {{- else -}}
+            {{- $vals = append $vals (printf "Additional Properties: %+v" .AdditionalProperties) -}}
+        {{- end -}}
+    {{- end -}}
+
+    {{- if gt (len $vals) 0 -}}
+        **Object:**<br>
+    {{- end -}}
+
+    {{- join $vals "<br>" -}}
+
+{{- end -}}
