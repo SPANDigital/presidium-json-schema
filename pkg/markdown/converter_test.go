@@ -13,7 +13,7 @@ import (
 
 var (
 	_, b, _, _ = runtime.Caller(0)
-	rootpath   = filepath.Join(filepath.Dir(b), "../..")
+	rootPath   = filepath.Join(filepath.Dir(b), "../..")
 )
 
 func init() {
@@ -37,7 +37,7 @@ func TestNewConverter(t *testing.T) {
 
 func TestConverter_Convert(t *testing.T) {
 	c := NewConverter(config)
-	err := c.Convert(filepath.Join(rootpath, "test"))
+	err := c.Convert(filepath.Join(rootPath, "test"))
 	assert.Nil(t, err)
 }
 

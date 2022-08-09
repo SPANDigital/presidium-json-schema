@@ -9,6 +9,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -45,6 +46,7 @@ func (c *Converter) Convert(path string) error {
 	if err := c.parseTemplates(); err != nil {
 		return err
 	}
+
 	paths, err := FindFiles(path, c.config.Extension, c.config.Recursive)
 	if err != nil {
 		return err
@@ -60,6 +62,10 @@ func (c *Converter) Convert(path string) error {
 	schemas, err := c.compileSchemas(paths)
 	if err != nil {
 		return err
+	}
+
+	for _, schema := range schemas {
+		c.converted[schema.Location] = true
 	}
 
 	for _, schema := range schemas {
@@ -170,6 +176,7 @@ func (c *Converter) convertToMarkdown(filename string, schema *Schema) error {
 // createIndex creates a _index.md file for each directory in the path
 func (c *Converter) createIndex(path string) error {
 	log.Debugf("creating index: %s", path)
+	path = filepath.Clean(path)
 	if c.config.Destination == path {
 		return nil
 	}
@@ -183,17 +190,10 @@ func (c *Converter) createIndex(path string) error {
 		return errors.Wrapf(err, "failed to created index directory: %s", path)
 	}
 
-	indexFile, err := AppFS.Create(indexPath)
-	if err != nil {
-		return errors.Wrapf(err, "failed to created index: %s", path)
-	}
-
-	defer indexFile.Close()
-
 	dir := filepath.Base(path)
 	fm := fmt.Sprintf("---\ntitle: %s\n---", dir)
-	if _, err := indexFile.Write([]byte(fm)); err != nil {
-		return errors.Wrapf(err, "failed to write front-matter: %s", path)
+	if err := afero.WriteFile(AppFS, indexPath, []byte(fm), os.ModePerm); err != nil {
+		return err
 	}
 
 	return c.createIndex(filepath.Dir(path))
