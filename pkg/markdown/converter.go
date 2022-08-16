@@ -57,13 +57,6 @@ func (c Converter) Clean() error {
 	return nil
 }
 
-func PathExist(path string) bool {
-	if _, err := AppFS.Stat(path); os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
 func (c *Converter) Convert(path string) error {
 	c.Clean()
 	if err := c.parseTemplates(); err != nil {

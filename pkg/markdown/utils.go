@@ -10,6 +10,7 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"net/url"
+	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -258,4 +259,11 @@ func FuncMap(ref string, patterns map[string]string, order map[string]*orderedma
 		"append":        Append,
 		"title":         Title,
 	}
+}
+
+func PathExist(path string) bool {
+	if _, err := AppFS.Stat(path); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
