@@ -37,6 +37,7 @@ func TestNewConverter(t *testing.T) {
 
 func TestConverter_Clean(t *testing.T) {
 	c := NewConverter(config)
+	rootpath := "."
 	test_output := filepath.Join(rootpath, "test_output")
 	test_file, err := AppFS.Create(test_output)
 	assert.Nil(t, err)
