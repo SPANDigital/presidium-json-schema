@@ -17,6 +17,7 @@ func init() {
 	flags.StringVarP(&config.Extension, "extension", "e", "*.schema.json", "the schema extension")
 	flags.BoolVarP(&config.Recursive, "walk", "w", false, "walk through sub-directories")
 	flags.BoolVarP(&config.Ordered, "ordered", "o", false, "preserve the schema order (defaults to alphabetical)")
+	flags.BoolVarP(&config.Clean, "clean", "c", false, "removes the output directory before generating output files")
 	rootCmd.AddCommand(convert)
 }
 

@@ -4,3 +4,4 @@ go.sum
 /dist/
 /reports/
 /out
+.vscode/

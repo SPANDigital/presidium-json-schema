@@ -11,6 +11,7 @@ Flags:
   -d, --destination string   the output directory (default ".")
   -e, --extension string     the schema extension (default "*.schema.json")
   -o, --ordered              preserve the schema order (defaults to alphabetical)
+  -c, --clean                removes the output directory before generating output files, negative by default
   -w, --walk                 walk through sub-directories
 ```
 

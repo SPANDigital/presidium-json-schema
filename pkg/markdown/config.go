@@ -8,6 +8,7 @@ type Config struct {
 	Recursive   bool
 	Ordered     bool
 	Local       bool
+	Clean       bool
 }
 
 func (c Config) ReferenceUrl() string {
