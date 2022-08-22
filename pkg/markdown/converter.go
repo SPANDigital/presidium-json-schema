@@ -58,7 +58,13 @@ func (c Converter) Clean() error {
 }
 
 func (c *Converter) Convert(path string) error {
-	c.Clean()
+	if c.config.Clean {
+		err := c.Clean()
+		if err != nil {
+			return err
+		}
+	}
+
 	if err := c.parseTemplates(); err != nil {
 		return err
 	}
