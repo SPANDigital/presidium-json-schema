@@ -3,12 +3,13 @@ package markdown
 import "strings"
 
 type Config struct {
-	Destination string
-	Extension   string
-	Recursive   bool
-	Ordered     bool
-	Local       bool
-	Clean       bool
+	Destination     string
+	Extension       string
+	Recursive       bool
+	Ordered         bool
+	OrderedFilePath bool
+	Local           bool
+	Clean           bool
 }
 
 func (c Config) ReferenceUrl() string {

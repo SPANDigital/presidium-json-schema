@@ -3,10 +3,11 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/SPANDigital/presidium-json-schema/pkg/markdown"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
+
+	"github.com/SPANDigital/presidium-json-schema/pkg/markdown"
+	"github.com/spf13/cobra"
 )
 
 var config markdown.Config
@@ -17,6 +18,7 @@ func init() {
 	flags.StringVarP(&config.Extension, "extension", "e", "*.schema.json", "the schema extension")
 	flags.BoolVarP(&config.Recursive, "walk", "w", false, "walk through sub-directories")
 	flags.BoolVarP(&config.Ordered, "ordered", "o", false, "preserve the schema order (defaults to alphabetical)")
+	flags.BoolVarP(&config.OrderedFilePath, "orderedfilepath", "p", false, "preserve the schema order (defaults to alphabetical) by appending a digit to the filename prefix")
 	flags.BoolVarP(&config.Clean, "clean", "c", false, "removes the output directory before generating output files")
 	rootCmd.AddCommand(convert)
 }
