@@ -209,7 +209,7 @@ func IndexOf(slice []string, val string) int {
 	return -1
 }
 
-// SetFilenameWeight returns the weight, in string format, adjusted for the filename by ensuring two digits
+// GetFilenameWeight returns the weight, in string format, adjusted for the filename by ensuring two digits
 func GetFilenameWeight(num int) string {
 	if num < 10 {
 		return fmt.Sprintf("%v%v", 0, num)
