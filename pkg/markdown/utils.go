@@ -4,11 +4,6 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
-	"github.com/iancoleman/orderedmap"
-	"github.com/iancoleman/strcase"
-	"github.com/santhosh-tekuri/jsonschema/v5"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -16,6 +11,12 @@ import (
 	"regexp"
 	"strings"
 	"text/template"
+
+	"github.com/iancoleman/orderedmap"
+	"github.com/iancoleman/strcase"
+	"github.com/santhosh-tekuri/jsonschema/v5"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func Slugify(s string) string {
@@ -206,6 +207,14 @@ func IndexOf(slice []string, val string) int {
 		}
 	}
 	return -1
+}
+
+// GetFilenameWeight returns the weight, in string format, adjusted for the filename by ensuring two digits
+func GetFilenameWeight(num int) string {
+	if num < 10 {
+		return fmt.Sprintf("%v%v", 0, num)
+	}
+	return fmt.Sprintf("%v", num)
 }
 
 // GetWeight returns the schema weight based on it's position in the schema file
