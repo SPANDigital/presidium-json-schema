@@ -177,7 +177,7 @@ func GetPermalink(ref string) func(schema *jsonschema.Schema) string {
 
 		fileName := FileName(schema.Title, schema.Location)
 		path := FilePath(schema.Location)
-		return fmt.Sprintf("[%s]({{%%baseurl%%}}/%s/%s/#%s)", title, ref, path, fileName)
+		return fmt.Sprintf("[%s]({{<baseurl>}}/%s/%s/#%s)", title, ref, path, fileName)
 	}
 }
 

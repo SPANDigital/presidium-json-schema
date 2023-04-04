@@ -197,18 +197,18 @@ func TestGetUrl(t *testing.T) {
 	actual := link(&jsonschema.Schema{
 		Location: "/test/sample.schema.json#/properties/dimensions",
 	})
-	assert.Equal(t, "[dimensions]({{%baseurl%}}/reference/sample-schema/#dimensions)", actual)
+	assert.Equal(t, "[dimensions]({{<baseurl>}}/reference/sample-schema/#dimensions)", actual)
 
 	actual = link(&jsonschema.Schema{
 		Title:    "sample",
 		Location: "/test/sample.schema.json#/properties/dimensions",
 	})
-	assert.Equal(t, "[sample]({{%baseurl%}}/reference/sample-schema/#sample)", actual)
+	assert.Equal(t, "[sample]({{<baseurl>}}/reference/sample-schema/#sample)", actual)
 
 	actual = link(&jsonschema.Schema{
 		Location: "sample.schema.json#/dimensions",
 	})
-	assert.Equal(t, "[dimensions]({{%baseurl%}}/reference/sample-schema/#dimensions)", actual)
+	assert.Equal(t, "[dimensions]({{<baseurl>}}/reference/sample-schema/#dimensions)", actual)
 }
 
 func TestFilenameWithoutExt(t *testing.T) {
