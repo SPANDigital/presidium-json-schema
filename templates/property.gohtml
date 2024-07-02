@@ -26,11 +26,11 @@
     {{- end -}}
 
     {{- if .Property.Items2020 -}}
-        {{- template "property" dict "Name" " Array > ItemType" "Property" .Property.Items2020 -}}
+        {{- template "property" dict "Name" "Array > ItemType" "Property" .Property.Items2020 -}}
     {{- end -}}
 
 {{- end -}}
 
 {{- define "row" }}
-| {{ .Name }}| {{ template "type" .Property }} | {{ .Property.Description }} | {{ template "validations" .Property }} |
+| {{ .Name }} | {{ template "type" .Property }} | {{ .Property.Description }} | {{ template "validations" .Property }} |
 {{- end -}}

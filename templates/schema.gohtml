@@ -40,17 +40,17 @@
     {{- template "property" dict "Name" "ItemType" "Property" .Items2020 -}}
 {{- end -}}
 
-{{- $typeOfs := findTypeOfs . -}}
-{{- if $typeOfs -}}
-    {{ range $idx, $property := $typeOfs }}
-        {{ template "typeOfs" $property }}
-    {{ end }}
+{{- $typeofs := findTypeOfs . -}}
+{{- range $idx, $schema := $typeofs }}
+    {{ $kind := or (and .AllOf "AllOf") (and .AnyOf "AnyOf") (and .OneOf "OneOf") -}}
+    {{- $subschemas := or .AllOf .AnyOf .OneOf -}}
+    {{ template "inline" dict "Name" (printf "%s:" $kind) "Schema" $schema "Properties" $subschemas }}
 {{- end -}}
 
 {{ end }}
 
 {{- define "tableHeader" -}}
-### {{.}}
+**{{.}}**
 | Name | Type | Description | Restrictions |
 |------|------|-------------|--------------|
 {{- end -}}
