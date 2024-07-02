@@ -4,6 +4,7 @@
     {{- if (not $types) -}}
         {{- if .Properties -}}
             {{- $types = slice $types "object" -}}
+        {{- end -}}
         {{-  if (or .Items .Items2020) -}}
             {{- $types = append $types "array" -}}
         {{- end -}}
