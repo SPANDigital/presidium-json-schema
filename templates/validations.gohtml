@@ -1,9 +1,10 @@
 {{- define "validations" -}}
-    {{- $types := or .Types slice -}}
+    {{- $types := .Types -}}
+
     {{- if (not $types) -}}
         {{- if .Properties -}}
-            {{- $types = append $types "object" -}}
-        {{- else if (or .Items .Items2020) -}}
+            {{- $types = slice $types "object" -}}
+        {{-  if (or .Items .Items2020) -}}
             {{- $types = append $types "array" -}}
         {{- end -}}
     {{- end -}}
@@ -21,7 +22,9 @@
     {{- else -}}
         {{ template "default" $ }}
     {{- end -}}
+
     {{- template "any" $ -}}
+    
 {{- end -}}
 
 {{- define "default" -}}
