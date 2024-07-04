@@ -21,3 +21,31 @@ To convert a file you simply:
 ```shell
 presidium-json-schema convert <PATH_TO_SCHEMA_DIR> -d <THE_DESTINATION_DIR>
 ```
+
+### Releasing a new version
+
+This project uses [GoReleaser](https://goreleaser.com/) to automate the release process. When you push a new tag to the repository, GoReleaser will create a new release with the artifacts for the supported platforms and publish it to the [Span Homebrew tap](https://github.com/SPANDigital/homebrew-tap).
+
+To release a new version, you need to create a new tag and push it to the repository. The version number should follow the [Semantic Versioning](https://semver.org/) specification.
+
+```shell
+git tag -a v1.0.0 -m "Release version 1.0.0"
+git push origin v1.0.0
+```
+
+Once a release is published, you can install the new version or upgrade an existing installation using Homebrew.
+
+To install the latest version:
+
+```shell
+brew tap SPANDigital/homebrew-tap https://github.com/SPANDigital/homebrew-tap.git
+brew install presidium-json-schema
+```
+
+
+To upgrade an existing installation:
+
+```shell
+brew upgrade presidium-json-schema
+```
+
