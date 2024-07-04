@@ -42,7 +42,6 @@ brew tap SPANDigital/homebrew-tap https://github.com/SPANDigital/homebrew-tap.gi
 brew install presidium-json-schema
 ```
 
-
 To upgrade an existing installation:
 
 ```shell
