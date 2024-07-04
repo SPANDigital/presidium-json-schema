@@ -4,6 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"text/template"
+
 	"github.com/SPANDigital/presidium-json-schema/templates"
 	"github.com/iancoleman/orderedmap"
 	"github.com/pkg/errors"
@@ -11,11 +17,6 @@ import (
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"io/fs"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"text/template"
 )
 
 type SchemaConverter interface {
@@ -46,7 +47,25 @@ func NewConverter(config Config) *Converter {
 	}
 }
 
+func (c Converter) Clean() error {
+	if !PathExist(c.config.Destination) {
+		return nil
+	}
+	if err := AppFS.RemoveAll(c.config.Destination); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Converter) Convert(path string) error {
+	if c.config.Clean {
+		err := c.Clean()
+		if err != nil {
+			return err
+		}
+	}
+
 	if err := c.parseTemplates(); err != nil {
 		return err
 	}
@@ -84,6 +103,11 @@ func (c *Converter) Convert(path string) error {
 			}
 
 			name := FileName(def.Title, def.Location)
+			// Append weight to the filename if flag orderedfilepath is set
+			if c.config.OrderedFilePath {
+				weight := GetWeight(c.order)(def.Path, def.Location)
+				name = fmt.Sprintf("%v-%v", GetFilenameWeight(weight), name)
+			}
 			if err := c.convertToMarkdown(name, def); err != nil {
 				return err
 			}
@@ -121,7 +145,7 @@ func (c *Converter) loadSchema(path string) error {
 		return errors.Wrapf(err, "failed to decode schema: %s", path)
 	}
 
-	if c.config.Ordered {
+	if c.config.Ordered || c.config.OrderedFilePath {
 		c.order[path] = orderedmap.New()
 		if err = json.Unmarshal(b, c.order[path]); err != nil {
 			return errors.Wrapf(err, "failed to decode schema: %s", path)
