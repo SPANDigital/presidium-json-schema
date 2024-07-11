@@ -1,5 +1,16 @@
 {{- define "validations" -}}
-    {{- range $idx, $type := .Types -}}
+    {{- $types := .Types -}}
+
+    {{- if (not $types) -}}
+        {{- if .Properties -}}
+            {{- $types = slice $types "object" -}}
+        {{- end -}}
+        {{-  if (or .Items .Items2020) -}}
+            {{- $types = append $types "array" -}}
+        {{- end -}}
+    {{- end -}}
+
+    {{- range $idx, $type := $types -}}
         {{- if eq $type "object" -}}
             {{ template "object" $ }}
         {{- else if eq $type "array" -}}
@@ -9,6 +20,18 @@
         {{- else if or (eq $type "integer") (eq $type "number") -}}
             {{ template "number" $ }}
         {{- end -}}
+    {{- else -}}
+        {{ template "default" $ }}
     {{- end -}}
+
     {{- template "any" $ -}}
+    
+{{- end -}}
+
+{{- define "default" -}}
+    {{- $vals := slice -}}
+    {{- if .Required -}}
+        {{- $vals = append $vals (printf "Required: [%+v]" (join .Required ", " )) -}}
+    {{- end -}}
+    {{- join $vals "<br>" -}}
 {{- end -}}

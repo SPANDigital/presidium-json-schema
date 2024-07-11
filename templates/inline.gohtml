@@ -1,0 +1,19 @@
+{{- define "inline" -}}
+    {{- template "inlineHeader" . -}}
+    {{- if isSlice .Properties -}}
+        {{- range $idx, $property := .Properties -}}
+            {{- template "property" dict "Name" (printf "ItemType[%d]" $idx) "Property" $property -}}
+        {{- end -}}
+    {{- else -}}
+        {{- range $name, $property := .Properties -}}
+            {{- template "property" dict "Name" $name "Property" $property -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+
+{{- define "inlineHeader" }}
+{{ $name := firstNonEmpty .Name .Schema.Title (humanize .Schema.Location) -}}
+<a id="{{ ref .Schema.Location }}">**{{ $name }}**</a>
+| Name | Type | Description | Restrictions |
+|------|------|-------------|--------------|
+{{- end -}}
