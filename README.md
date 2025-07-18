@@ -38,8 +38,7 @@ Once a release is published, you can install the new version or upgrade an exist
 To install the latest version:
 
 ```shell
-brew tap SPANDigital/homebrew-tap https://github.com/SPANDigital/homebrew-tap.git
-brew install presidium-json-schema
+brew install SPANDigital/tap/presidium-json-schema
 ```
 
 To upgrade an existing installation:
